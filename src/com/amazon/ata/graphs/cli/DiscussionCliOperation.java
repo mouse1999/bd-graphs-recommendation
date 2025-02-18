@@ -14,6 +14,7 @@ public enum DiscussionCliOperation {
     VIEW_YOUR_FOLLOWS("View all members you follow"),
     CREATE_FOLLOW("Follow a member"),
     VIEW_RECOMMENDATIONS("View recommended members to follow"),
+    UNFOLLOW("unfollow a member"),
     EXIT("Exit");
 
     private final String userVisibleRepresentation;

@@ -28,4 +28,5 @@ public interface DiscussionCliComponent {
     ViewRecommendationsHandler provideRecommendationsHandler();
     ViewYourFollowsHandler provideViewYourFollowsHandler();
     CreateFollowHandler provideCreateFollowHandler();
+    UnfollowHandler provideUnfollowHandler();
 }

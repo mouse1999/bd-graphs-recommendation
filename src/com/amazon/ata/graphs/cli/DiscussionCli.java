@@ -30,6 +30,7 @@ public class DiscussionCli {
     private final CreateFollowHandler createFollowHandler;
     private final ExitHandler exitHandler;
     private final DiscussionCliState state;
+    private final UnfollowHandler unfollowHandler;
 
     /**
      * Creates a new DiscussionCli to interact with user.
@@ -46,7 +47,8 @@ public class DiscussionCli {
                          final ViewYourFollowsHandler viewYourFollowsHandler,
                          final CreateFollowHandler createFollowHandler,
                          final ExitHandler exitHandler,
-                         final DiscussionCliState state) {
+                         final DiscussionCliState state,
+                         final UnfollowHandler unfollowHandler) {
         this.userHandler = userHandler;
         this.loginHandler = loginHandler;
         this.viewTopicsHandler = viewTopicsHandler;
@@ -59,6 +61,7 @@ public class DiscussionCli {
         this.createFollowHandler = createFollowHandler;
         this.exitHandler = exitHandler;
         this.state = state;
+        this.unfollowHandler = unfollowHandler;
 
         registerHandlers();
     }
@@ -94,6 +97,7 @@ public class DiscussionCli {
         userOperationOptions.put("7", DiscussionCliOperation.CREATE_FOLLOW);
         userOperationOptions.put("8", DiscussionCliOperation.VIEW_RECOMMENDATIONS);
         userOperationOptions.put("9", DiscussionCliOperation.EXIT);
+        userOperationOptions.put("10", DiscussionCliOperation.UNFOLLOW);
 
         operationHandlers.put(LOGIN, loginHandler);
         operationHandlers.put(DiscussionCliOperation.VIEW_TOPICS, viewTopicsHandler);
@@ -104,6 +108,7 @@ public class DiscussionCli {
         operationHandlers.put(DiscussionCliOperation.VIEW_YOUR_FOLLOWS, viewYourFollowsHandler);
         operationHandlers.put(DiscussionCliOperation.CREATE_FOLLOW, createFollowHandler);
         operationHandlers.put(DiscussionCliOperation.VIEW_RECOMMENDATIONS, viewRecommendationsHandler);
+        operationHandlers.put(DiscussionCliOperation.UNFOLLOW, unfollowHandler);
         operationHandlers.put(DiscussionCliOperation.EXIT, exitHandler);
     }
 

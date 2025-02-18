@@ -75,5 +75,10 @@ public class FollowEdgeDao {
         mapper.save(edge);
         return edge;
     }
+    public void unfollowEdge(String fromUsername, String toUsername) {
+        FollowEdge followEdge = new FollowEdge(fromUsername, toUsername);
+        mapper.delete(followEdge);
+
+    }
 
 }

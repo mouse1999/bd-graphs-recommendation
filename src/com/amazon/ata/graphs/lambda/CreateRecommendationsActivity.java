@@ -40,13 +40,14 @@ public class CreateRecommendationsActivity {
             followEdgeDao.getAllFollows(stringFollow).stream()
                     .map(FollowEdge::getToUsername)
                     .forEach(string ->{
-
                         if (recommendations.size() <= input.getLimit()) {
-                            recommendations.add(new Recommendation(input.getUsername(), string, "Active"));
+                            if (string != input.getUsername() && !stringFollows.contains(string)) {
+                                recommendations.add(new Recommendation(input.getUsername(), string, "Active"));
+
+                            }
                         }
                     });
         });
-
         return recommendations;
     }
 }
