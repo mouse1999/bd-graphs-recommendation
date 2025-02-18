@@ -5,159 +5,95 @@ Resources:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - lambda.amazonaws.com
-          Action:
-          - sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
       Path: "/"
       Policies:
         - PolicyName: dynamodbAccessRole
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
-            - Effect: Allow
-              Action:
-              - dynamodb:*
-              Resource: "*"
-            - Effect: Allow
-              Action:
-              - logs:*
-              Resource: "*"
+              - Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: "*"
+
   InitFunction:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        ZipFile: >
+        ZipFile: |
           const AWS = require("aws-sdk");
-          const response = require('./cfn-response');
           const docClient = new AWS.DynamoDB.DocumentClient();
-          exports.handler = function(event, context) {
-            console.log(JSON.stringify(event,null,2));
-            var params = {
-              RequestItems: {
-                "Graph-FollowEdges" : [
-                  {
-                    PutRequest: {
-                      Item: {
-                        toUsername: "alice*",
-                        fromUsername: "carly*"
-                      }
-                    }
-                  },
-                  {
-                    PutRequest: {
-                      Item: {
-                        toUsername: "byron*",
-                        fromUsername: "alice*"
-                      }
-                    }
-                  },
-                  {
-                    PutRequest: {
-                      Item: {
-                        toUsername: "byron*",
-                        fromUsername: "darnell*"
-                      }
-                    }
-                  },
-                  {
-                    PutRequest: {
-                      Item: {
-                        toUsername: "carly*",
-                        fromUsername: "darnell*"
-                      }
-                    }
-                  },
-                  {
-                    PutRequest: {
-                      Item: {
-                        toUsername: "zandra*",
-                        fromUsername: "young*"
-                      }
-                    }
-                  },
-                  {
-                    PutRequest: {
-                      Item: {
-                        toUsername: "young*",
-                        fromUsername: "luz*"
-                      }
-                    }
-                  },
-                  {
-                    PutRequest: {
-                      Item: {
-                        toUsername: "luz*",
-                        fromUsername: "darnell*"
-                      }
-                    }
-                  },
-                  {
-                    PutRequest: {
-                      Item: {
-                        toUsername: "user",
-                        fromUsername: "carly*"
-                      }
-                    }
-                  },
-                  {
-                    PutRequest: {
-                      Item: {
-                        toUsername: "user",
-                        fromUsername: "byron*"
-                      }
-                    }
-                  },
-                  {
-                    PutRequest: {
-                      Item: {
-                        toUsername: "user",
-                        fromUsername: "alice*"
-                      }
-                    }
+          
+          exports.handler = async function(event, context) {
+              console.log("Event:", JSON.stringify(event, null, 2));
+
+              var params = {
+                  RequestItems: {
+                      "Graph-FollowEdges" : [
+                          { PutRequest: { Item: { toUsername: "alice*", fromUsername: "carly*" } } },
+                          { PutRequest: { Item: { toUsername: "byron*", fromUsername: "alice*" } } },
+                          { PutRequest: { Item: { toUsername: "byron*", fromUsername: "darnell*" } } },
+                          { PutRequest: { Item: { toUsername: "carly*", fromUsername: "darnell*" } } },
+                          { PutRequest: { Item: { toUsername: "zandra*", fromUsername: "young*" } } },
+                          { PutRequest: { Item: { toUsername: "young*", fromUsername: "luz*" } } },
+                          { PutRequest: { Item: { toUsername: "luz*", fromUsername: "darnell*" } } },
+                          { PutRequest: { Item: { toUsername: "user", fromUsername: "carly*" } } },
+                          { PutRequest: { Item: { toUsername: "user", fromUsername: "byron*" } } },
+                          { PutRequest: { Item: { toUsername: "user", fromUsername: "alice*" } } }
+                      ]
                   }
-                ]
+              };
+
+              try {
+                  await docClient.batchWrite(params).promise();
+                  return { Status: "SUCCESS" };
+              } catch (err) {
+                  console.error("Batch write error:", err);
+                  return { Status: "FAILED", Reason: err.message };
               }
-            };
-            docClient.batchWrite(params, function(err, data) {
-              if (err) {
-                response.send(event, context, "FAILED", {});
-              } else {
-                response.send(event, context, "SUCCESS", {});
-              }
-            });
           };
       Handler: index.handler
       Role:
-        Fn::GetAtt: [ LambdaRole , "Arn" ]
-      Runtime: nodejs14.x
+        Fn::GetAtt: [ LambdaRole, "Arn" ]
+      Runtime: nodejs20.x
       Timeout: 60
+
   GraphFollowEdges:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: "Graph-FollowEdges"
       AttributeDefinitions:
-        -
-          AttributeName: "toUsername"
+        - AttributeName: "toUsername"
           AttributeType: "S"
-        -
-          AttributeName: "fromUsername"
+        - AttributeName: "fromUsername"
           AttributeType: "S"
       KeySchema:
-        -
-          AttributeName: "toUsername"
+        - AttributeName: "toUsername"
           KeyType: "HASH"
-        -
-          AttributeName: "fromUsername"
+        - AttributeName: "fromUsername"
           KeyType: "RANGE"
       BillingMode: PAY_PER_REQUEST
+    DeletionPolicy: Retain
+
   InitializeFollowEdges:
     Type: Custom::InitFunction
     DependsOn: GraphFollowEdges
     Properties:
       ServiceToken:
-         Fn::GetAtt: [ InitFunction , "Arn" ]
+        Fn::GetAtt: [ InitFunction, "Arn" ]
       DynamoTableName:
         Ref: GraphFollowEdges
